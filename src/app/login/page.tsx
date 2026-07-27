@@ -24,7 +24,7 @@ export default async function LoginPage({
         </Link>
 
         <p className="mt-8 text-sm font-medium uppercase tracking-widest text-neutral-400">
-          Wardrobe AI
+          Garmently
         </p>
 
         <h1 className="mt-3 text-3xl font-bold">

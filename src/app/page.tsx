@@ -43,7 +43,7 @@ const steps = [
     number: "03",
     title: "Create your outfit",
     description:
-      "Select an occasion and let Wardrobe AI style pieces you already own.",
+      "Select an occasion and let Garmently style pieces you already own.",
   },
 ];
 
@@ -152,7 +152,7 @@ export default function Home() {
         <SectionIntroduction
           label="Designed for everyday dressing"
           title="A more thoughtful relationship with your clothes."
-          description="Wardrobe AI combines clothing organization, care guidance, and personal styling in one private space."
+          description="Garmently combines clothing organization, care guidance, and personal styling in one private space."
         />
 
         <div className="mt-14 grid gap-6 lg:grid-cols-3">
@@ -288,7 +288,7 @@ export default function Home() {
             <SectionIntroduction
               label="Protect every garment"
               title="Better care begins with better information."
-              description="Photograph the care label and Wardrobe AI will organize the material composition, washing guidance, drying instructions, and detergent category."
+              description="Photograph the care label and Garmently will organize the material composition, washing guidance, drying instructions, and detergent category."
             />
 
             <div className="mt-9 space-y-5">
@@ -321,7 +321,7 @@ export default function Home() {
         <SectionIntroduction
           label="Three simple steps"
           title="From photograph to complete outfit."
-          description="Wardrobe AI turns the clothing you already own into an organized, useful, and intelligent wardrobe."
+          description="Garmently turns the clothing you already own into an organized, useful, and intelligent wardrobe."
         />
 
         <div className="relative mt-16 grid gap-6 lg:grid-cols-3">
@@ -353,7 +353,7 @@ export default function Home() {
           <div className="absolute left-1/2 top-[-12rem] h-[30rem] w-[30rem] -translate-x-1/2 rounded-full bg-[#c7a66a]/15 blur-[110px]" />
 
           <div className="absolute bottom-[-6rem] right-[-2rem] font-[family-name:var(--font-display)] text-[16rem] font-semibold leading-none text-white/[0.018]">
-            W
+            G
           </div>
 
           <div className="relative mx-auto max-w-3xl">
@@ -722,7 +722,7 @@ function BrandFooter() {
   return (
     <div>
       <p className="font-[family-name:var(--font-display)] text-2xl font-semibold">
-        Wardrobe
+        Garmently
       </p>
 
       <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#8d7042]">
