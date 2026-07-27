@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type SaveableOutfitItem = {
   id: string;
@@ -36,11 +36,16 @@ export default function SaveOutfitButton({
   const [errorMessage, setErrorMessage] =
     useState("");
 
-  useEffect(() => {
+  const [previousOutfit, setPreviousOutfit] =
+    useState(outfit);
+
+  // Reset the save state whenever a new outfit is generated.
+  if (previousOutfit !== outfit) {
+    setPreviousOutfit(outfit);
     setSavedOutfitId(null);
     setErrorMessage("");
     setIsSaving(false);
-  }, [outfit]);
+  }
 
   async function handleSave() {
     setIsSaving(true);
@@ -99,14 +104,14 @@ export default function SaveOutfitButton({
 
   if (savedOutfitId) {
     return (
-      <div className="mt-8 rounded-2xl border border-green-900 bg-green-950/30 p-5">
-        <p className="font-semibold text-green-200">
+      <div className="mt-8 rounded-2xl border border-[#8fa98a]/30 bg-[#8fa98a]/10 p-5">
+        <p className="font-semibold text-[#c7dbc2]">
           Outfit saved successfully.
         </p>
 
         <Link
           href="/dashboard/saved-outfits"
-          className="mt-4 inline-block rounded-xl bg-green-200 px-5 py-3 font-semibold text-green-950 hover:bg-green-100"
+          className="mt-4 inline-block rounded-xl bg-[#8fa98a]/90 px-5 py-3 font-semibold text-[#0f1610] hover:bg-[#8fa98a]"
         >
           View saved outfits
         </Link>
@@ -117,7 +122,7 @@ export default function SaveOutfitButton({
   return (
     <div className="mt-8">
       {errorMessage && (
-        <div className="mb-4 rounded-xl border border-red-900 bg-red-950/40 p-4 text-red-200">
+        <div className="mb-4 rounded-xl border border-[#c87a72]/30 bg-[#c87a72]/10 p-4 text-[#e6b7b1]">
           {errorMessage}
         </div>
       )}
@@ -126,7 +131,7 @@ export default function SaveOutfitButton({
         type="button"
         disabled={isSaving}
         onClick={handleSave}
-        className="rounded-xl bg-violet-200 px-6 py-3 font-semibold text-violet-950 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-xl bg-[#e6d3ae] px-6 py-3 font-semibold text-[#17130d] hover:bg-[#f4e5c8] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isSaving
           ? "Saving outfit..."

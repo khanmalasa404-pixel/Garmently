@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import DashboardHeader from "@/components/dashboard-header";
 import { createClient } from "@/lib/supabase/server";
+
+import { logout } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -158,26 +161,28 @@ export default async function SavedOutfitsPage() {
   );
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-6xl">
-        <Link
-          href="/dashboard"
-          className="text-sm text-neutral-400 hover:text-white"
-        >
-          ← Back to closet
-        </Link>
+    <main className="min-h-screen text-[#f4efe6]">
+      <DashboardHeader
+        userEmail={user.email}
+        logoutAction={logout}
+      />
 
-        <div className="mt-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-widest text-neutral-500">
-              Garmently
-            </p>
+            <div className="flex items-center gap-3">
+              <span className="h-px w-10 bg-[#c7a66a]" />
 
-            <h1 className="mt-3 text-4xl font-bold">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#c7a66a]">
+                Your outfits
+              </p>
+            </div>
+
+            <h1 className="mt-6 font-[family-name:var(--font-display)] text-4xl font-semibold sm:text-5xl">
               Saved outfits
             </h1>
 
-            <p className="mt-4 text-neutral-400">
+            <p className="mt-4 text-[#a59d8e]">
               Review combinations generated from
               your virtual closet.
             </p>
@@ -185,33 +190,33 @@ export default async function SavedOutfitsPage() {
 
           <Link
             href="/dashboard/outfits"
-            className="rounded-xl bg-white px-5 py-3 text-center font-semibold text-black hover:bg-neutral-200"
+            className="rounded-xl bg-[#e6d3ae] px-5 py-3 text-center font-semibold text-[#17130d] hover:bg-[#f4e5c8]"
           >
             Generate a new outfit
           </Link>
         </div>
 
         {error && (
-          <div className="mt-10 rounded-xl border border-red-900 bg-red-950/40 p-5 text-red-200">
+          <div className="mt-10 rounded-xl border border-[#c87a72]/30 bg-[#c87a72]/10 p-5 text-[#e6b7b1]">
             Saved outfits could not be loaded:{" "}
             {error.message}
           </div>
         )}
 
         {!error && outfits.length === 0 && (
-          <section className="mt-12 rounded-3xl border border-dashed border-neutral-700 p-12 text-center">
-            <h2 className="text-3xl font-bold">
+          <section className="mt-12 rounded-[2rem] border border-dashed border-white/[0.12] p-12 text-center">
+            <h2 className="font-[family-name:var(--font-display)] text-3xl font-semibold">
               No saved outfits yet
             </h2>
 
-            <p className="mx-auto mt-4 max-w-lg text-neutral-400">
+            <p className="mx-auto mt-4 max-w-lg text-[#a59d8e]">
               Generate an outfit for an occasion
               and save it here for later.
             </p>
 
             <Link
               href="/dashboard/outfits"
-              className="mt-7 inline-block rounded-xl bg-white px-6 py-3 font-semibold text-black hover:bg-neutral-200"
+              className="mt-7 inline-block rounded-xl bg-[#e6d3ae] px-6 py-3 font-semibold text-[#17130d] hover:bg-[#f4e5c8]"
             >
               Generate outfit
             </Link>
@@ -232,23 +237,23 @@ export default async function SavedOutfitsPage() {
               return (
                 <article
                   key={outfit.id}
-                  className="overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900"
+                  className="overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#151410]"
                 >
-                  <header className="border-b border-neutral-800 p-7">
+                  <header className="border-b border-white/[0.07] p-7">
                     <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="text-sm font-semibold uppercase tracking-widest text-violet-300">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c7a66a]">
                           {formatOccasion(
                             outfit.occasion,
                           )}
                         </p>
 
-                        <h2 className="mt-2 text-3xl font-bold">
+                        <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold">
                           {outfit.title}
                         </h2>
 
                         {outfit.style_preference && (
-                          <p className="mt-2 text-sm text-neutral-500">
+                          <p className="mt-2 text-sm text-[#777064]">
                             Style:{" "}
                             {
                               outfit.style_preference
@@ -257,7 +262,7 @@ export default async function SavedOutfitsPage() {
                         )}
                       </div>
 
-                      <time className="text-sm text-neutral-500">
+                      <time className="text-sm text-[#777064]">
                         {new Intl.DateTimeFormat(
                           "en-CA",
                           {
@@ -272,7 +277,7 @@ export default async function SavedOutfitsPage() {
                       </time>
                     </div>
 
-                    <p className="mt-5 max-w-4xl leading-7 text-neutral-300">
+                    <p className="mt-5 max-w-4xl leading-7 text-[#a59d8e]">
                       {outfit.explanation}
                     </p>
                   </header>
@@ -300,9 +305,9 @@ export default async function SavedOutfitsPage() {
                           <Link
                             key={`${outfit.id}-${garment.id}`}
                             href={`/dashboard/items/${garment.id}`}
-                            className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-950 transition hover:-translate-y-1 hover:border-neutral-600"
+                            className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0f0f0d] transition hover:-translate-y-1 hover:border-[#c7a66a]/40"
                           >
-                            <div className="aspect-square bg-neutral-800">
+                            <div className="aspect-square bg-[#201e18]">
                               {imageUrl ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img
@@ -315,24 +320,24 @@ export default async function SavedOutfitsPage() {
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
-                                <div className="flex h-full items-center justify-center text-neutral-500">
+                                <div className="flex h-full items-center justify-center text-[#777064]">
                                   No photograph
                                 </div>
                               )}
                             </div>
 
                             <div className="p-5">
-                              <p className="text-xs font-semibold uppercase tracking-widest text-violet-300">
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c7a66a]">
                                 {
                                   outfitItem.role
                                 }
                               </p>
 
-                              <h3 className="mt-2 text-xl font-semibold">
+                              <h3 className="mt-2 font-[family-name:var(--font-display)] text-xl font-semibold">
                                 {garment.name}
                               </h3>
 
-                              <div className="mt-3 space-y-1 text-sm text-neutral-500">
+                              <div className="mt-3 space-y-1 text-sm text-[#777064]">
                                 {garment.primary_color && (
                                   <p>
                                     Colour:{" "}
@@ -352,7 +357,7 @@ export default async function SavedOutfitsPage() {
                                 )}
                               </div>
 
-                              <p className="mt-4 border-t border-neutral-800 pt-4 text-sm leading-6 text-neutral-300">
+                              <p className="mt-4 border-t border-white/[0.07] pt-4 text-sm leading-6 text-[#a59d8e]">
                                 {
                                   outfitItem.reason
                                 }
@@ -367,12 +372,12 @@ export default async function SavedOutfitsPage() {
                   {(
                     outfit.styling_tips ?? []
                   ).length > 0 && (
-                    <section className="border-t border-neutral-800 p-7">
-                      <h3 className="text-xl font-semibold">
+                    <section className="border-t border-white/[0.07] p-7">
+                      <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold">
                         Styling tips
                       </h3>
 
-                      <ul className="mt-4 space-y-3 text-neutral-300">
+                      <ul className="mt-4 space-y-3 text-[#a59d8e]">
                         {(
                           outfit.styling_tips ??
                           []
@@ -382,7 +387,7 @@ export default async function SavedOutfitsPage() {
                               key={`${outfit.id}-tip-${index}`}
                               className="flex gap-3"
                             >
-                              <span className="text-violet-300">
+                              <span className="text-[#c7a66a]">
                                 •
                               </span>
 
@@ -397,12 +402,12 @@ export default async function SavedOutfitsPage() {
                   {(
                     outfit.missing_pieces ?? []
                   ).length > 0 && (
-                    <section className="border-t border-amber-900 bg-amber-950/20 p-7">
-                      <h3 className="text-xl font-semibold text-amber-200">
+                    <section className="border-t border-[#c7a66a]/25 bg-[#c7a66a]/[0.06] p-7">
+                      <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold text-[#e6d3ae]">
                         Missing pieces
                       </h3>
 
-                      <ul className="mt-4 space-y-2 text-neutral-300">
+                      <ul className="mt-4 space-y-2 text-[#a59d8e]">
                         {(
                           outfit.missing_pieces ??
                           []
@@ -423,7 +428,7 @@ export default async function SavedOutfitsPage() {
             })}
           </div>
         )}
-      </section>
+      </div>
     </main>
   );
 }

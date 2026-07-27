@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import BrandLogo from "@/components/brand-logo";
 
 type DashboardHeaderProps = {
-  itemCount?: number;
+  itemCount?: number | null;
   userEmail?: string;
   logoutAction: () => Promise<void>;
 };
@@ -32,7 +32,7 @@ const navigationItems = [
 ];
 
 export default function DashboardHeader({
-  itemCount = 0,
+  itemCount = null,
   userEmail,
   logoutAction,
 }: DashboardHeaderProps) {
@@ -41,9 +41,14 @@ export default function DashboardHeader({
   const [menuOpen, setMenuOpen] =
     useState(false);
 
-  useEffect(() => {
+  const [previousPathname, setPreviousPathname] =
+    useState(pathname);
+
+  // Close the mobile menu when the route changes.
+  if (previousPathname !== pathname) {
+    setPreviousPathname(pathname);
     setMenuOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     document.body.style.overflow = menuOpen
@@ -89,18 +94,20 @@ export default function DashboardHeader({
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
-            <div className="rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2">
-              <p className="text-xs text-[#777064]">
-                Closet
-              </p>
+            {itemCount !== null && (
+              <div className="rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2">
+                <p className="text-xs text-[#777064]">
+                  Closet
+                </p>
 
-              <p className="text-sm font-semibold text-[#e6d3ae]">
-                {itemCount}{" "}
-                {itemCount === 1
-                  ? "piece"
-                  : "pieces"}
-              </p>
-            </div>
+                <p className="text-sm font-semibold text-[#e6d3ae]">
+                  {itemCount}{" "}
+                  {itemCount === 1
+                    ? "piece"
+                    : "pieces"}
+                </p>
+              </div>
+            )}
 
             <form action={logoutAction}>
               <button
@@ -199,12 +206,14 @@ export default function DashboardHeader({
               Your wardrobe
             </p>
 
-            <p className="mt-2 font-[family-name:var(--font-display)] text-3xl text-[#f4efe6]">
-              {itemCount}{" "}
-              {itemCount === 1
-                ? "piece"
-                : "pieces"}
-            </p>
+            {itemCount !== null && (
+              <p className="mt-2 font-[family-name:var(--font-display)] text-3xl text-[#f4efe6]">
+                {itemCount}{" "}
+                {itemCount === 1
+                  ? "piece"
+                  : "pieces"}
+              </p>
+            )}
 
             {userEmail && (
               <p className="mt-2 truncate text-xs text-[#777064]">

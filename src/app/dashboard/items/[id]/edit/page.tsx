@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import DashboardHeader from "@/components/dashboard-header";
 import { createClient } from "@/lib/supabase/server";
 import { updateGarment } from "./actions";
+
+import { logout } from "../../../actions";
 
 type EditGarmentPageProps = {
   params: Promise<{
@@ -53,36 +56,45 @@ export default async function EditGarmentPage({
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-3xl">
+    <main className="min-h-screen text-[#f4efe6]">
+      <DashboardHeader
+        userEmail={user.email}
+        logoutAction={logout}
+      />
+
+      <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
         <Link
           href={`/dashboard/items/${garment.id}`}
-          className="text-sm text-neutral-400 hover:text-white"
+          className="text-sm text-[#a59d8e] hover:text-[#f4efe6]"
         >
           ← Cancel editing
         </Link>
 
-        <p className="mt-10 text-sm uppercase tracking-widest text-neutral-500">
-          Garmently
-        </p>
+        <div className="mt-6 flex items-center gap-3">
+          <span className="h-px w-10 bg-[#c7a66a]" />
 
-        <h1 className="mt-3 text-4xl font-bold">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#c7a66a]">
+            Edit garment
+          </p>
+        </div>
+
+        <h1 className="mt-6 font-[family-name:var(--font-display)] text-4xl font-semibold sm:text-5xl">
           Edit clothing item
         </h1>
 
-        <p className="mt-4 text-neutral-400">
+        <p className="mt-4 leading-7 text-[#a59d8e]">
           Correct the clothing information and care instructions.
         </p>
 
         {query.error && (
-          <div className="mt-8 rounded-xl border border-red-900 bg-red-950/40 p-4 text-red-200">
+          <div className="mt-8 rounded-xl border border-[#c87a72]/30 bg-[#c87a72]/10 p-4 text-[#e6b7b1]">
             {query.error}
           </div>
         )}
 
         <form
           action={updateGarment}
-          className="mt-10 space-y-8 rounded-3xl border border-neutral-800 bg-neutral-900 p-8"
+          className="mt-10 space-y-8 rounded-[2rem] border border-white/[0.08] bg-[#151410] p-8"
         >
           <input
             type="hidden"
@@ -111,7 +123,7 @@ export default async function EditGarmentPage({
                 name="category"
                 required
                 defaultValue={garment.category}
-                className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400"
+                className="w-full rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50"
               >
                 <option value="top">Top</option>
                 <option value="bottom">Bottom</option>
@@ -148,7 +160,7 @@ export default async function EditGarmentPage({
               className="mb-2 block font-medium"
             >
               Washing instructions
-              <span className="ml-2 text-neutral-500">
+              <span className="ml-2 text-[#777064]">
                 Optional
               </span>
             </label>
@@ -159,7 +171,7 @@ export default async function EditGarmentPage({
               rows={5}
               defaultValue={garment.washing_instructions ?? ""}
               placeholder="Machine wash cold on a gentle cycle."
-              className="w-full resize-none rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400"
+              className="w-full resize-none rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50"
             />
           </div>
 
@@ -169,7 +181,7 @@ export default async function EditGarmentPage({
               className="mb-2 block font-medium"
             >
               Detergent recommendation
-              <span className="ml-2 text-neutral-500">
+              <span className="ml-2 text-[#777064]">
                 Optional
               </span>
             </label>
@@ -182,27 +194,27 @@ export default async function EditGarmentPage({
                 garment.detergent_recommendation ?? ""
               }
               placeholder="Use a mild liquid detergent."
-              className="w-full resize-none rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400"
+              className="w-full resize-none rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50"
             />
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="submit"
-              className="rounded-xl bg-white px-6 py-3 font-semibold text-black hover:bg-neutral-200"
+              className="rounded-xl bg-[#e6d3ae] px-6 py-3 font-semibold text-[#17130d] hover:bg-[#f4e5c8]"
             >
               Save changes
             </button>
 
             <Link
               href={`/dashboard/items/${garment.id}`}
-              className="rounded-xl border border-neutral-700 px-6 py-3 text-center font-semibold hover:bg-neutral-800"
+              className="rounded-xl border border-white/[0.15] px-6 py-3 text-center font-semibold text-[#e8e1d6] hover:bg-white/[0.05]"
             >
               Cancel
             </Link>
           </div>
         </form>
-      </section>
+      </div>
     </main>
   );
 }
@@ -229,7 +241,7 @@ function FormField({
         {label}
 
         {!required && (
-          <span className="ml-2 text-neutral-500">
+          <span className="ml-2 text-[#777064]">
             Optional
           </span>
         )}
@@ -240,7 +252,7 @@ function FormField({
         name={id}
         required={required}
         defaultValue={defaultValue}
-        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400"
+        className="w-full rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50"
       />
     </div>
   );

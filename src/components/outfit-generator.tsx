@@ -92,10 +92,10 @@ export default function OutfitGenerator() {
     <div className="mt-10">
       <form
         onSubmit={handleSubmit}
-        className="rounded-3xl border border-neutral-800 bg-neutral-900 p-8"
+        className="rounded-[2rem] border border-white/[0.08] bg-[#151410] p-8"
       >
         {errorMessage && (
-          <div className="mb-6 rounded-xl border border-red-900 bg-red-950/40 p-4 text-red-200">
+          <div className="mb-6 rounded-xl border border-[#c87a72]/30 bg-[#c87a72]/10 p-4 text-[#e6b7b1]">
             {errorMessage}
           </div>
         )}
@@ -118,7 +118,7 @@ export default function OutfitGenerator() {
                   event.target.value,
                 )
               }
-              className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400 disabled:opacity-50"
+              className="w-full rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50 disabled:opacity-50"
             >
               <option value="casual-outing">
                 Casual outing
@@ -164,7 +164,7 @@ export default function OutfitGenerator() {
               className="mb-2 block font-medium"
             >
               Style preference
-              <span className="ml-2 text-neutral-500">
+              <span className="ml-2 text-[#777064]">
                 Optional
               </span>
             </label>
@@ -180,7 +180,7 @@ export default function OutfitGenerator() {
                 )
               }
               placeholder="Old money, minimalist, streetwear..."
-              className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400 disabled:opacity-50"
+              className="w-full rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50 disabled:opacity-50"
             />
           </div>
         </div>
@@ -188,7 +188,7 @@ export default function OutfitGenerator() {
         <button
           type="submit"
           disabled={isGenerating}
-          className="mt-6 rounded-xl bg-white px-6 py-3 font-semibold text-black hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-6 rounded-xl bg-[#e6d3ae] px-6 py-3 font-semibold text-[#17130d] hover:bg-[#f4e5c8] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isGenerating
             ? "Building your outfit..."
@@ -198,16 +198,16 @@ export default function OutfitGenerator() {
 
       {outfit && (
         <section className="mt-10">
-          <div className="rounded-3xl border border-violet-900 bg-violet-950/20 p-8">
-            <p className="text-sm font-semibold uppercase tracking-widest text-violet-300">
+          <div className="rounded-[2rem] border border-[#c7a66a]/30 bg-[#c7a66a]/[0.06] p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c7a66a]">
               Generated outfit
             </p>
 
-            <h2 className="mt-3 text-3xl font-bold">
+            <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl font-semibold">
               {outfit.title}
             </h2>
 
-            <p className="mt-4 max-w-3xl leading-7 text-neutral-300">
+            <p className="mt-4 max-w-3xl leading-7 text-[#a59d8e]">
               {outfit.explanation}
             </p>
           </div>
@@ -216,9 +216,9 @@ export default function OutfitGenerator() {
             {outfit.items.map((item) => (
               <article
                 key={item.id}
-                className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900"
+                className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#151410]"
               >
-                <div className="aspect-square bg-neutral-800">
+                <div className="aspect-square bg-[#201e18]">
                   {item.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -227,22 +227,22 @@ export default function OutfitGenerator() {
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-neutral-500">
+                    <div className="flex h-full items-center justify-center text-[#777064]">
                       No photograph
                     </div>
                   )}
                 </div>
 
                 <div className="p-5">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-violet-300">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#c7a66a]">
                     {item.role}
                   </p>
 
-                  <h3 className="mt-2 text-xl font-semibold">
+                  <h3 className="mt-2 font-[family-name:var(--font-display)] text-xl font-semibold">
                     {item.name}
                   </h3>
 
-                  <div className="mt-3 space-y-1 text-sm text-neutral-400">
+                  <div className="mt-3 space-y-1 text-sm text-[#a59d8e]">
                     {item.brand && (
                       <p>Brand: {item.brand}</p>
                     )}
@@ -261,7 +261,7 @@ export default function OutfitGenerator() {
                     )}
                   </div>
 
-                  <p className="mt-5 border-t border-neutral-800 pt-4 text-sm leading-6 text-neutral-300">
+                  <p className="mt-5 border-t border-white/[0.07] pt-4 text-sm leading-6 text-[#a59d8e]">
                     {item.reason}
                   </p>
                 </div>
@@ -270,19 +270,19 @@ export default function OutfitGenerator() {
           </div>
 
           {outfit.stylingTips.length > 0 && (
-            <section className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
-              <h3 className="text-xl font-semibold">
+            <section className="mt-8 rounded-2xl border border-white/[0.08] bg-[#151410] p-6">
+              <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold">
                 Styling tips
               </h3>
 
-              <ul className="mt-4 space-y-3 text-neutral-300">
+              <ul className="mt-4 space-y-3 text-[#a59d8e]">
                 {outfit.stylingTips.map(
                   (tip, index) => (
                     <li
                       key={`${tip}-${index}`}
                       className="flex gap-3"
                     >
-                      <span className="text-violet-300">
+                      <span className="text-[#c7a66a]">
                         •
                       </span>
 
@@ -295,17 +295,17 @@ export default function OutfitGenerator() {
           )}
 
           {outfit.missingPieces.length > 0 && (
-            <section className="mt-6 rounded-2xl border border-amber-900 bg-amber-950/20 p-6">
-              <h3 className="text-xl font-semibold text-amber-200">
+            <section className="mt-6 rounded-2xl border border-[#c7a66a]/30 bg-[#c7a66a]/[0.06] p-6">
+              <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold text-[#e6d3ae]">
                 Missing from your closet
               </h3>
 
-              <p className="mt-2 text-sm text-neutral-400">
+              <p className="mt-2 text-sm text-[#a59d8e]">
                 These pieces would help complete
                 the requested outfit:
               </p>
 
-              <ul className="mt-4 space-y-2 text-neutral-300">
+              <ul className="mt-4 space-y-2 text-[#a59d8e]">
                 {outfit.missingPieces.map(
                   (piece, index) => (
                     <li
@@ -328,7 +328,7 @@ export default function OutfitGenerator() {
               setOutfit(null);
               setErrorMessage("");
             }}
-            className="mt-8 rounded-xl border border-neutral-700 px-6 py-3 font-semibold hover:bg-neutral-900"
+            className="mt-8 rounded-xl border border-white/[0.15] px-6 py-3 font-semibold text-[#e8e1d6] hover:bg-white/[0.05]"
           >
             Generate another outfit
           </button>

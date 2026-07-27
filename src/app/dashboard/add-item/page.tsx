@@ -1,7 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import AddGarmentForm from "@/components/add-garment-form";
+import DashboardHeader from "@/components/dashboard-header";
 import { createClient } from "@/lib/supabase/server";
+
+import { logout } from "../actions";
 
 export default async function AddItemPage() {
   const supabase = await createClient();
@@ -15,30 +17,33 @@ export default async function AddItemPage() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-3xl">
-        <Link
-          href="/dashboard"
-          className="text-sm text-neutral-400 hover:text-white"
-        >
-          ← Back to closet
-        </Link>
+    <main className="min-h-screen text-[#f4efe6]">
+      <DashboardHeader
+        userEmail={user.email}
+        logoutAction={logout}
+      />
 
-        <p className="mt-10 text-sm uppercase tracking-widest text-neutral-500">
-          Garmently
-        </p>
+      <div className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
+        <div className="flex items-center gap-3">
+          <span className="h-px w-10 bg-[#c7a66a]" />
 
-        <h1 className="mt-3 text-4xl font-bold">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#c7a66a]">
+            New garment
+          </p>
+        </div>
+
+        <h1 className="mt-6 font-[family-name:var(--font-display)] text-4xl font-semibold sm:text-5xl">
           Add a clothing item
         </h1>
 
-        <p className="mt-4 max-w-2xl text-neutral-400">
-          Upload a photograph and record the clothing details. Automatic AI
-          analysis will be added after the basic upload system is working.
+        <p className="mt-4 max-w-2xl leading-7 text-[#a59d8e]">
+          Photograph the garment, let Gemini suggest the details, and
+          optionally generate a clean catalog-style photo before saving it
+          to your closet.
         </p>
 
         <AddGarmentForm />
-      </section>
+      </div>
     </main>
   );
 }

@@ -452,19 +452,19 @@ function ClosetPreview() {
           <PreviewGarment
             name="Wool overcoat"
             category="Outerwear"
-            background="bg-gradient-to-br from-[#5c5142] via-[#2d2922] to-[#171612]"
+            imageSrc="/closet-preview/wool-overcoat.jpg"
           />
 
           <PreviewGarment
             name="Cotton knit"
             category="Top"
-            background="bg-gradient-to-br from-[#8c725f] via-[#4c3e34] to-[#1b1714]"
+            imageSrc="/closet-preview/cotton-knit.jpg"
           />
 
           <PreviewGarment
             name="Tailored trouser"
             category="Bottom"
-            background="bg-gradient-to-br from-[#5d5a50] via-[#34332e] to-[#171713]"
+            imageSrc="/closet-preview/tailored-trouser.jpg"
           />
 
           <div className="relative flex min-h-52 flex-col justify-between overflow-hidden rounded-[1.4rem] border border-dashed border-[#c7a66a]/25 bg-[#c7a66a]/[0.04] p-5">
@@ -525,18 +525,23 @@ function ClosetPreview() {
 type PreviewGarmentProps = {
   name: string;
   category: string;
-  background: string;
+  imageSrc: string;
 };
 
 function PreviewGarment({
   name,
   category,
-  background,
+  imageSrc,
 }: PreviewGarmentProps) {
   return (
-    <article
-      className={`group relative min-h-52 overflow-hidden rounded-[1.4rem] border border-white/[0.08] ${background}`}
-    >
+    <article className="group relative min-h-52 overflow-hidden rounded-[1.4rem] border border-white/[0.08] bg-[#171612]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={imageSrc}
+        alt={name}
+        className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+      />
+
       <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
 
       <div className="absolute left-4 top-4 rounded-full border border-white/15 bg-black/25 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/75 backdrop-blur-md">
