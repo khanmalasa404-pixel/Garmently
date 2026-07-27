@@ -63,7 +63,7 @@ export default function Home() {
               <span className="h-1.5 w-1.5 rounded-full bg-[#c7a66a] shadow-[0_0_12px_rgba(199,166,106,0.7)]" />
 
               <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c7a66a]">
-                The intelligent wardrobe
+                Garmently
               </span>
             </div>
 

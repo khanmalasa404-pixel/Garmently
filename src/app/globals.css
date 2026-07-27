@@ -5,12 +5,10 @@
   --foreground: #f4efe6;
 }
 
+/* --font-sans and --font-display come from next/font in layout.tsx. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-display);
 }
 
 body {

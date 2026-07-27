@@ -1,26 +1,33 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  Manrope,
+} from "next/font/google";
+
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
   subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-display",
-  subsets: ["latin"],
+  weight: ["500", "600", "700"],
   style: ["normal", "italic"],
+  variable: "--font-display",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Garmently",
-  description: "Your intelligent wardrobe — organize your closet and style outfits with AI.",
+  title: {
+    default: "GARMENTLy",
+    template: "%s | GARMENTLy",
+  },
+  description:
+    "A private intelligent virtual closet for clothing care and personalized outfit creation.",
+  applicationName: "GARMENTLy",
 };
 
 export default function RootLayout({
@@ -31,9 +38,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${manrope.variable} ${cormorant.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+      </body>
     </html>
   );
 }

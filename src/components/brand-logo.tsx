@@ -49,14 +49,8 @@ export default function BrandLogo({
       </span>
 
       {!compact && (
-        <span>
-          <span className="block font-[family-name:var(--font-display)] text-2xl font-semibold leading-none tracking-tight text-[#f4efe6]">
-            Garmently
-          </span>
-
-          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.34em] text-[#c7a66a]">
-            Artificial Intelligence
-          </span>
+        <span className="font-[family-name:var(--font-display)] text-4xl font-semibold leading-none text-[#f4efe6]">
+          Garment<span className="text-[#c7a66a]">Ly</span>
         </span>
       )}
     </Link>
