@@ -191,7 +191,7 @@ Currently implemented:
 
 ## Founder
 
-Created by **Talal Mehmood**.
+Created by **Talal Mehmood & Malasa Khan**.
 
 ---
 
