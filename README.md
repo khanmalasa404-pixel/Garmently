@@ -207,4 +207,3 @@ AI-generated garment information and care recommendations should be reviewed alo
 
 </div>
 
-
