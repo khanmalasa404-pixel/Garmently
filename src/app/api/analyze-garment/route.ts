@@ -1,19 +1,18 @@
-import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 
+import {
+  createGeminiClient,
+  describeGeminiError,
+  fileToBase64,
+  validateImage,
+} from "@/lib/gemini/image-request";
+
 export const runtime = "nodejs";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const MAX_TOTAL_SIZE = 18 * 1024 * 1024;
-
-const SUPPORTED_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
+const MAX_TOTAL_SIZE = 27 * 1024 * 1024;
 
 const GarmentAnalysisSchema = z.object({
   suggestedName: z.string(),
@@ -53,6 +52,23 @@ const GarmentAnalysisSchema = z.object({
   ]),
 
   confidence: z.number().min(0).max(1),
+
+  boundingBox: z
+    .object({
+      xMin: z.number().min(0).max(1),
+      yMin: z.number().min(0).max(1),
+      xMax: z.number().min(0).max(1),
+      yMax: z.number().min(0).max(1),
+    })
+    .nullable(),
+
+  brandSource: z.enum([
+    "garment-photo",
+    "tag-photo",
+    "unknown",
+  ]),
+
+  brandConfidence: z.number().min(0).max(1).nullable(),
 });
 
 const garmentAnalysisJsonSchema = {
@@ -143,6 +159,31 @@ const garmentAnalysisJsonSchema = {
       minimum: 0,
       maximum: 1,
     },
+
+    boundingBox: {
+      type: ["object", "null"],
+      description:
+        "Normalized bounding box of the garment in the first (garment) image, as fractions of image width/height (0 to 1, origin top-left). Null if the garment cannot be confidently localized.",
+      properties: {
+        xMin: { type: "number", minimum: 0, maximum: 1 },
+        yMin: { type: "number", minimum: 0, maximum: 1 },
+        xMax: { type: "number", minimum: 0, maximum: 1 },
+        yMax: { type: "number", minimum: 0, maximum: 1 },
+      },
+      required: ["xMin", "yMin", "xMax", "yMax"],
+      additionalProperties: false,
+    },
+
+    brandSource: {
+      type: "string",
+      enum: ["garment-photo", "tag-photo", "unknown"],
+    },
+
+    brandConfidence: {
+      type: ["number", "null"],
+      minimum: 0,
+      maximum: 1,
+    },
   },
 
   required: [
@@ -159,28 +200,13 @@ const garmentAnalysisJsonSchema = {
     "careWarnings",
     "careSource",
     "confidence",
+    "boundingBox",
+    "brandSource",
+    "brandConfidence",
   ],
 
   additionalProperties: false,
 };
-
-function validateImage(file: File): string | null {
-  if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
-    return `${file.name} must be a JPG, PNG, or WEBP image.`;
-  }
-
-  if (file.size > MAX_FILE_SIZE) {
-    return `${file.name} is larger than 10 MB.`;
-  }
-
-  return null;
-}
-
-async function fileToBase64(file: File) {
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  return buffer.toString("base64");
-}
 
 export async function POST(request: Request) {
   try {
@@ -216,6 +242,20 @@ export async function POST(request: Request) {
 
     const garmentImage = formData.get("garmentImage");
     const careLabelImage = formData.get("careLabelImage");
+    const tagImage = formData.get("tagImage");
+
+    const tagBarcodeValueRaw = formData.get("tagBarcodeValue");
+    const tagBarcodeFormatRaw = formData.get("tagBarcodeFormat");
+
+    const tagBarcodeValue =
+      typeof tagBarcodeValueRaw === "string" && tagBarcodeValueRaw.trim()
+        ? tagBarcodeValueRaw.trim()
+        : null;
+
+    const tagBarcodeFormat =
+      typeof tagBarcodeFormatRaw === "string" && tagBarcodeFormatRaw.trim()
+        ? tagBarcodeFormatRaw.trim()
+        : null;
 
     if (!(garmentImage instanceof File)) {
       return NextResponse.json(
@@ -258,15 +298,18 @@ export async function POST(request: Request) {
           },
         );
       }
+    }
 
-      if (
-        garmentImage.size + careLabelImage.size >
-        MAX_TOTAL_SIZE
-      ) {
+    const hasTagImage =
+      tagImage instanceof File && tagImage.size > 0;
+
+    if (hasTagImage) {
+      const tagImageError = validateImage(tagImage);
+
+      if (tagImageError) {
         return NextResponse.json(
           {
-            error:
-              "The two images together must be smaller than 18 MB.",
+            error: tagImageError,
           },
           {
             status: 400,
@@ -275,11 +318,30 @@ export async function POST(request: Request) {
       }
     }
 
+    const totalSize =
+      garmentImage.size +
+      (hasCareLabel ? careLabelImage.size : 0) +
+      (hasTagImage ? tagImage.size : 0);
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      return NextResponse.json(
+        {
+          error:
+            "The uploaded images together must be smaller than 27 MB.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
     const prompt = `
 Analyze these photographs for a virtual wardrobe application.
 
 The first image is the clothing item. A second image, when supplied, is
-the garment's material and care label.
+the garment's material and care label. A third image, when supplied, is
+the garment's hangtag/brand label, which may show a printed brand name,
+logo, style number, or barcode/QR code.
 
 Return:
 - A short natural item name
@@ -293,6 +355,8 @@ Return:
 - Detergent category
 - Important care warnings
 - Confidence score
+- A bounding box around the garment in the first image
+- Where the brand was identified from, and how confidently
 
 Rules:
 
@@ -308,6 +372,19 @@ Rules:
 7. If reliable information cannot be determined, use null.
 8. Care source must state whether the result came from the care label,
    visual estimation, or a mixture of both.
+9. If a brand is identified with reasonable confidence, suggestedName
+   MUST start with that exact brand name (e.g. "Zara Wool Overcoat", not
+   "Wool Overcoat"). If no brand is identified, do not invent one.
+10. When a third "tag" image is supplied, look for a visible brand name
+    or logo printed or woven on it — this is a stronger brand signal
+    than the garment photo alone. A decoded barcode/QR value alone is
+    not sufficient evidence of a brand or specific product; do not
+    assert a product match from a code with no accompanying readable
+    brand text.
+11. Estimate a normalized bounding box tightly around the garment in the
+    first (garment) image, as fractions of image width/height (0 to 1,
+    origin top-left). If the garment cannot be confidently localized,
+    return null for boundingBox.
     `.trim();
 
     const garmentImageBase64 =
@@ -343,9 +420,33 @@ Rules:
       );
     }
 
-    const gemini = new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY,
-    });
+    if (hasTagImage) {
+      const tagImageBase64 = await fileToBase64(tagImage);
+
+      input.push(
+        {
+          type: "text" as const,
+          text:
+            "This next image is the garment's hangtag/brand label. Read any visible brand name, logo, or style number carefully.",
+        },
+        {
+          type: "image" as const,
+          data: tagImageBase64,
+          mime_type: tagImage.type,
+        },
+      );
+    }
+
+    if (tagBarcodeValue) {
+      input.push({
+        type: "text" as const,
+        text: `A barcode/QR code on the tag was already decoded as: ${tagBarcodeValue}${
+          tagBarcodeFormat ? ` (format: ${tagBarcodeFormat})` : ""
+        }. Treat this only as weak supporting context — do not claim to identify a specific product/SKU from it.`,
+      });
+    }
+
+    const gemini = createGeminiClient();
 
     const interaction = await gemini.interactions.create({
       model: "gemini-3.6-flash",
@@ -397,10 +498,7 @@ Rules:
 
     return NextResponse.json(
       {
-        error:
-          error instanceof Error
-            ? error.message
-            : "The garment could not be analyzed.",
+        error: describeGeminiError(error),
       },
       {
         status: 500,

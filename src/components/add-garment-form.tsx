@@ -4,8 +4,13 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 
 import { createClient } from "@/lib/supabase/client";
+import {
+  cropImageToBoundingBox,
+  type NormalizedBoundingBox,
+} from "@/lib/image/crop";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -61,6 +66,9 @@ type AnalysisResult = {
     | "visual-estimate"
     | "mixed";
   confidence: number;
+  boundingBox: NormalizedBoundingBox | null;
+  brandSource: "garment-photo" | "tag-photo" | "unknown";
+  brandConfidence: number | null;
 };
 
 function validateStorageImage(file: File): string | null {
@@ -119,7 +127,7 @@ async function uploadImage(
   supabase: SupabaseClient,
   userId: string,
   file: File,
-  imageType: "garment" | "care-label",
+  imageType: "garment" | "care-label" | "tag" | "catalog",
 ) {
   const extension = getFileExtension(file);
 
@@ -150,8 +158,35 @@ export default function AddGarmentForm() {
   const [garmentImage, setGarmentImage] =
     useState<File | null>(null);
 
+  const [garmentImagePreviewUrl, setGarmentImagePreviewUrl] =
+    useState<string | null>(null);
+
   const [careLabelImage, setCareLabelImage] =
     useState<File | null>(null);
+
+  const [tagImage, setTagImage] =
+    useState<File | null>(null);
+
+  const [tagBarcodeValue, setTagBarcodeValue] =
+    useState("");
+
+  const [tagBarcodeFormat, setTagBarcodeFormat] =
+    useState("");
+
+  const [boundingBox, setBoundingBox] =
+    useState<NormalizedBoundingBox | null>(null);
+
+  const [catalogImage, setCatalogImage] =
+    useState<File | null>(null);
+
+  const [catalogImagePreviewUrl, setCatalogImagePreviewUrl] =
+    useState<string | null>(null);
+
+  const [isGeneratingCatalogPhoto, setIsGeneratingCatalogPhoto] =
+    useState(false);
+
+  const [catalogPhotoError, setCatalogPhotoError] =
+    useState("");
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
@@ -181,6 +216,116 @@ export default function AddGarmentForm() {
 
   const [analysisMessage, setAnalysisMessage] =
     useState("");
+
+  async function handleTagImageChange(file: File | null) {
+    setTagImage(file);
+    setTagBarcodeValue("");
+    setTagBarcodeFormat("");
+    setAnalysisMessage("");
+
+    if (!file) {
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+
+    try {
+      const reader = new BrowserMultiFormatReader();
+      const result = await reader.decodeFromImageUrl(objectUrl);
+
+      setTagBarcodeValue(result.getText());
+      setTagBarcodeFormat(result.getBarcodeFormat().toString());
+    } catch {
+      // No barcode/QR found in the tag photo — not an error.
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
+  async function handleGenerateCatalogPhoto() {
+    setCatalogPhotoError("");
+
+    if (!garmentImage) {
+      setCatalogPhotoError(
+        "Upload a clothing photograph first.",
+      );
+      return;
+    }
+
+    setIsGeneratingCatalogPhoto(true);
+
+    try {
+      const sourceImage = await cropImageToBoundingBox(
+        garmentImage,
+        boundingBox,
+      );
+
+      const photoFormData = new FormData();
+      photoFormData.append("image", sourceImage);
+
+      const response = await fetch(
+        "/api/generate-catalog-photo",
+        {
+          method: "POST",
+          body: photoFormData,
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            "The catalog photo could not be generated.",
+        );
+      }
+
+      const binary = atob(data.image as string);
+      const bytes = new Uint8Array(binary.length);
+
+      for (let index = 0; index < binary.length; index += 1) {
+        bytes[index] = binary.charCodeAt(index);
+      }
+
+      const mimeType = data.mimeType as string;
+
+      const extension =
+        mimeType === "image/png" ? "png" : "jpg";
+
+      const generatedFile = new File(
+        [bytes],
+        `catalog-photo.${extension}`,
+        { type: mimeType },
+      );
+
+      if (catalogImagePreviewUrl) {
+        URL.revokeObjectURL(catalogImagePreviewUrl);
+      }
+
+      setCatalogImage(generatedFile);
+      setCatalogImagePreviewUrl(
+        URL.createObjectURL(generatedFile),
+      );
+    } catch (error) {
+      setCatalogPhotoError(
+        error instanceof Error
+          ? error.message
+          : "The catalog photo could not be generated.",
+      );
+    } finally {
+      setIsGeneratingCatalogPhoto(false);
+    }
+  }
+
+  function handleDiscardCatalogPhoto() {
+    if (catalogImagePreviewUrl) {
+      URL.revokeObjectURL(catalogImagePreviewUrl);
+    }
+
+    setCatalogImage(null);
+    setCatalogImagePreviewUrl(null);
+    setCatalogPhotoError("");
+  }
 
   async function handleAnalyze() {
     setErrorMessage("");
@@ -228,6 +373,22 @@ export default function AddGarmentForm() {
         );
       }
 
+      if (tagImage) {
+        analysisFormData.append("tagImage", tagImage);
+      }
+
+      if (tagBarcodeValue) {
+        analysisFormData.append(
+          "tagBarcodeValue",
+          tagBarcodeValue,
+        );
+
+        analysisFormData.append(
+          "tagBarcodeFormat",
+          tagBarcodeFormat,
+        );
+      }
+
       const response = await fetch(
         "/api/analyze-garment",
         {
@@ -247,7 +408,20 @@ export default function AddGarmentForm() {
       const analysis =
         data.analysis as AnalysisResult;
 
-      setName(analysis.suggestedName ?? "");
+      setBoundingBox(analysis.boundingBox ?? null);
+
+      const suggestedName =
+        analysis.suggestedName ?? "";
+
+      const displayName =
+        analysis.brand &&
+        !suggestedName
+          .toLowerCase()
+          .startsWith(analysis.brand.toLowerCase())
+          ? `${analysis.brand} ${suggestedName}`.trim()
+          : suggestedName;
+
+      setName(displayName);
       setCategory(analysis.category ?? "");
       setBrand(analysis.brand ?? "");
       setPrimaryColor(
@@ -383,6 +557,32 @@ export default function AddGarmentForm() {
         );
       }
 
+      let tagImagePath: string | null = null;
+
+      if (tagImage) {
+        tagImagePath = await uploadImage(
+          supabase,
+          user.id,
+          tagImage,
+          "tag",
+        );
+
+        uploadedPaths.push(tagImagePath);
+      }
+
+      let catalogImagePath: string | null = null;
+
+      if (catalogImage) {
+        catalogImagePath = await uploadImage(
+          supabase,
+          user.id,
+          catalogImage,
+          "catalog",
+        );
+
+        uploadedPaths.push(catalogImagePath);
+      }
+
       const { error: insertError } =
         await supabase
           .from("garments")
@@ -398,6 +598,10 @@ export default function AddGarmentForm() {
             image_path: garmentImagePath,
             care_label_image_path:
               careLabelImagePath,
+            tag_image_path: tagImagePath,
+            catalog_image_path: catalogImagePath,
+            tag_barcode_value: tagBarcodeValue || null,
+            tag_barcode_format: tagBarcodeFormat || null,
             washing_instructions:
               cleanedWashingInstructions ||
               null,
@@ -437,16 +641,16 @@ export default function AddGarmentForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-10 space-y-8 rounded-3xl border border-neutral-800 bg-neutral-900 p-8"
+      className="mt-10 space-y-8 rounded-[2rem] border border-white/[0.08] bg-[#151410] p-8"
     >
       {errorMessage && (
-        <div className="rounded-xl border border-red-900 bg-red-950/40 p-4 text-sm text-red-200">
+        <div className="rounded-xl border border-[#c87a72]/30 bg-[#c87a72]/10 p-4 text-sm text-[#e6b7b1]">
           {errorMessage}
         </div>
       )}
 
       {analysisMessage && (
-        <div className="rounded-xl border border-green-900 bg-green-950/30 p-4 text-sm text-green-200">
+        <div className="rounded-xl border border-[#8fa98a]/30 bg-[#8fa98a]/10 p-4 text-sm text-[#c7dbc2]">
           {analysisMessage}
         </div>
       )}
@@ -466,16 +670,31 @@ export default function AddGarmentForm() {
           required
           disabled={formIsBusy}
           onChange={(event) => {
-            setGarmentImage(
-              event.target.files?.[0] ?? null,
+            const file =
+              event.target.files?.[0] ?? null;
+
+            setGarmentImage(file);
+
+            setGarmentImagePreviewUrl(
+              (previousUrl) => {
+                if (previousUrl) {
+                  URL.revokeObjectURL(previousUrl);
+                }
+
+                return file
+                  ? URL.createObjectURL(file)
+                  : null;
+              },
             );
 
+            handleDiscardCatalogPhoto();
+            setBoundingBox(null);
             setAnalysisMessage("");
           }}
-          className="block w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-white file:px-4 file:py-2 file:font-semibold file:text-black disabled:opacity-50"
+          className="block w-full rounded-xl border border-white/[0.12] bg-[#0f0f0d] p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-[#e6d3ae] file:px-4 file:py-2 file:font-semibold file:text-[#17130d] disabled:opacity-50"
         />
 
-        <p className="mt-2 text-sm text-neutral-500">
+        <p className="mt-2 text-sm text-[#777064]">
           Upload a clear image showing the entire
           clothing item.
         </p>
@@ -487,7 +706,7 @@ export default function AddGarmentForm() {
           className="mb-2 block font-medium"
         >
           Care-label photograph
-          <span className="ml-2 text-neutral-500">
+          <span className="ml-2 text-[#777064]">
             Optional
           </span>
         </label>
@@ -504,21 +723,62 @@ export default function AddGarmentForm() {
 
             setAnalysisMessage("");
           }}
-          className="block w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-white file:px-4 file:py-2 file:font-semibold file:text-black disabled:opacity-50"
+          className="block w-full rounded-xl border border-white/[0.12] bg-[#0f0f0d] p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-[#e6d3ae] file:px-4 file:py-2 file:font-semibold file:text-[#17130d] disabled:opacity-50"
         />
 
-        <p className="mt-2 text-sm text-neutral-500">
+        <p className="mt-2 text-sm text-[#777064]">
           Include the material composition and
           washing symbols when available.
         </p>
       </div>
 
-      <div className="rounded-2xl border border-violet-900 bg-violet-950/20 p-5">
-        <p className="font-semibold text-violet-200">
+      <div>
+        <label
+          htmlFor="tagImage"
+          className="mb-2 block font-medium"
+        >
+          Garment tag / label photograph
+          <span className="ml-2 text-[#777064]">
+            Optional
+          </span>
+        </label>
+
+        <input
+          id="tagImage"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          disabled={formIsBusy}
+          onChange={(event) => {
+            void handleTagImageChange(
+              event.target.files?.[0] ?? null,
+            );
+          }}
+          className="block w-full rounded-xl border border-white/[0.12] bg-[#0f0f0d] p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-[#e6d3ae] file:px-4 file:py-2 file:font-semibold file:text-[#17130d] disabled:opacity-50"
+        />
+
+        <p className="mt-2 text-sm text-[#777064]">
+          A photo of the hangtag helps identify the
+          brand. If it has a barcode or QR code, we
+          try to read it automatically.
+        </p>
+
+        {tagBarcodeValue && (
+          <p className="mt-2 text-xs text-[#a59d8e]">
+            Detected code ({tagBarcodeFormat}):{" "}
+            <span className="text-[#e8e1d6]">
+              {tagBarcodeValue}
+            </span>{" "}
+            — for your reference only.
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-[#c7a66a]/30 bg-[#c7a66a]/[0.06] p-5">
+        <p className="font-semibold text-[#e6d3ae]">
           AI-assisted entry
         </p>
 
-        <p className="mt-2 text-sm leading-6 text-neutral-400">
+        <p className="mt-2 text-sm leading-6 text-[#a59d8e]">
           Gemini will examine the photographs and
           suggest the clothing details. You remain
           responsible for reviewing the care
@@ -531,17 +791,111 @@ export default function AddGarmentForm() {
           disabled={
             formIsBusy || !garmentImage
           }
-          className="mt-4 rounded-xl bg-violet-200 px-5 py-3 font-semibold text-violet-950 hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-4 rounded-xl bg-[#e6d3ae] px-5 py-3 font-semibold text-[#17130d] hover:bg-[#f4e5c8] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isAnalyzing
             ? "Analyzing photographs..."
             : "Analyze with AI"}
         </button>
 
-        <p className="mt-3 text-xs text-neutral-500">
+        <p className="mt-3 text-xs text-[#777064]">
           AI analysis supports JPG, PNG, and WEBP.
           HEIC images may still be saved manually.
         </p>
+      </div>
+
+      <div className="rounded-2xl border border-[#c7a66a]/30 bg-[#c7a66a]/[0.06] p-5">
+        <p className="font-semibold text-[#e6d3ae]">
+          Catalog-style photo
+        </p>
+
+        <p className="mt-2 text-sm leading-6 text-[#a59d8e]">
+          Generate a clean, plain-background version of
+          your photo, styled like a catalog product shot.
+          This is optional — your original photo is
+          always kept too.
+        </p>
+
+        {catalogPhotoError && (
+          <p className="mt-3 text-sm text-[#e6b7b1]">
+            {catalogPhotoError}
+          </p>
+        )}
+
+        {!catalogImagePreviewUrl ? (
+          <button
+            type="button"
+            onClick={handleGenerateCatalogPhoto}
+            disabled={
+              formIsBusy ||
+              isGeneratingCatalogPhoto ||
+              !garmentImage
+            }
+            className="mt-4 rounded-xl bg-[#e6d3ae] px-5 py-3 font-semibold text-[#17130d] hover:bg-[#f4e5c8] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isGeneratingCatalogPhoto
+              ? "Generating catalog photo..."
+              : "Generate catalog photo"}
+          </button>
+        ) : (
+          <div className="mt-4">
+            <div className="grid max-w-sm grid-cols-2 gap-3">
+              <div>
+                <p className="mb-2 text-xs uppercase tracking-widest text-[#777064]">
+                  Original
+                </p>
+
+                {garmentImagePreviewUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={garmentImagePreviewUrl}
+                    alt="Original garment photograph"
+                    className="aspect-square w-full rounded-xl object-cover"
+                  />
+                )}
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs uppercase tracking-widest text-[#c7a66a]">
+                  Catalog style
+                </p>
+
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={catalogImagePreviewUrl}
+                  alt="Generated catalog-style photograph"
+                  className="aspect-square w-full rounded-xl border border-[#c7a66a]/40 object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={handleGenerateCatalogPhoto}
+                disabled={
+                  formIsBusy || isGeneratingCatalogPhoto
+                }
+                className="rounded-xl border border-[#c7a66a]/40 px-4 py-2 text-sm font-semibold text-[#e6d3ae] hover:bg-[#c7a66a]/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isGeneratingCatalogPhoto
+                  ? "Regenerating..."
+                  : "Regenerate"}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDiscardCatalogPhoto}
+                disabled={
+                  formIsBusy || isGeneratingCatalogPhoto
+                }
+                className="rounded-xl border border-white/[0.15] px-4 py-2 text-sm text-[#a59d8e] hover:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Discard, keep original
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -572,7 +926,7 @@ export default function AddGarmentForm() {
             onChange={(event) =>
               setCategory(event.target.value)
             }
-            className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400 disabled:opacity-50"
+            className="w-full rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50 disabled:opacity-50"
           >
             <option value="" disabled>
               Select a category
@@ -630,7 +984,7 @@ export default function AddGarmentForm() {
           className="mb-2 block font-medium"
         >
           Washing instructions
-          <span className="ml-2 text-neutral-500">
+          <span className="ml-2 text-[#777064]">
             Optional
           </span>
         </label>
@@ -647,7 +1001,7 @@ export default function AddGarmentForm() {
             )
           }
           placeholder="Wash cold on a gentle cycle. Do not tumble dry."
-          className="w-full resize-none rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400 disabled:opacity-50"
+          className="w-full resize-none rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50 disabled:opacity-50"
         />
       </div>
 
@@ -657,7 +1011,7 @@ export default function AddGarmentForm() {
           className="mb-2 block font-medium"
         >
           Detergent recommendation
-          <span className="ml-2 text-neutral-500">
+          <span className="ml-2 text-[#777064]">
             Optional
           </span>
         </label>
@@ -674,7 +1028,7 @@ export default function AddGarmentForm() {
             )
           }
           placeholder="Use a mild wool-safe liquid detergent."
-          className="w-full resize-none rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400 disabled:opacity-50"
+          className="w-full resize-none rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50 disabled:opacity-50"
         />
       </div>
 
@@ -682,7 +1036,7 @@ export default function AddGarmentForm() {
         <button
           type="submit"
           disabled={formIsBusy}
-          className="rounded-xl bg-white px-6 py-3 font-semibold text-black hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-[#e6d3ae] px-6 py-3 font-semibold text-[#17130d] hover:bg-[#f4e5c8] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting
             ? "Saving item..."
@@ -691,7 +1045,7 @@ export default function AddGarmentForm() {
 
         <Link
           href="/dashboard"
-          className="rounded-xl border border-neutral-700 px-6 py-3 text-center font-semibold hover:bg-neutral-800"
+          className="rounded-xl border border-white/[0.15] px-6 py-3 text-center font-semibold text-[#e8e1d6] hover:bg-white/[0.05]"
         >
           Cancel
         </Link>
@@ -728,7 +1082,7 @@ function FormField({
         {label}
 
         {!required && (
-          <span className="ml-2 text-neutral-500">
+          <span className="ml-2 text-[#777064]">
             Optional
           </span>
         )}
@@ -744,7 +1098,7 @@ function FormField({
           onChange(event.target.value)
         }
         placeholder={placeholder}
-        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 outline-none focus:border-neutral-400 disabled:opacity-50"
+        className="w-full rounded-xl border border-white/[0.12] bg-[#0f0f0d] px-4 py-3 outline-none focus:border-[#c7a66a]/50 disabled:opacity-50"
       />
     </div>
   );

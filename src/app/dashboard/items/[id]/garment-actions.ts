@@ -23,7 +23,9 @@ export async function deleteGarment(formData: FormData) {
 
   const { data: garment, error: fetchError } = await supabase
     .from("garments")
-    .select("id, image_path, care_label_image_path")
+    .select(
+      "id, image_path, care_label_image_path, catalog_image_path, tag_image_path",
+    )
     .eq("id", garmentId)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -35,6 +37,8 @@ export async function deleteGarment(formData: FormData) {
   const imagePaths = [
     garment.image_path,
     garment.care_label_image_path,
+    garment.catalog_image_path,
+    garment.tag_image_path,
   ].filter((path): path is string => Boolean(path));
 
   if (imagePaths.length > 0) {

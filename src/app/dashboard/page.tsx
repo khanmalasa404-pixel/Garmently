@@ -30,6 +30,7 @@ export default async function DashboardPage() {
         primary_color,
         material,
         image_path,
+        catalog_image_path,
         washing_instructions,
         detergent_recommendation,
         created_at
@@ -41,7 +42,10 @@ export default async function DashboardPage() {
 
   const garmentsWithImages = await Promise.all(
     (garments ?? []).map(async (garment) => {
-      if (!garment.image_path) {
+      const displayPath =
+        garment.catalog_image_path ?? garment.image_path;
+
+      if (!displayPath) {
         return {
           ...garment,
           imageUrl: null,
@@ -51,7 +55,7 @@ export default async function DashboardPage() {
       const { data } = await supabase.storage
         .from("garment-images")
         .createSignedUrl(
-          garment.image_path,
+          displayPath,
           60 * 60,
         );
 

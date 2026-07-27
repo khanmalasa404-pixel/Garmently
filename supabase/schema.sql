@@ -1,4 +1,4 @@
--- Wardrobe AI database schema
+-- Garmently database schema
 -- Run this once in your Supabase project's SQL Editor
 -- (Dashboard -> SQL Editor -> New query -> paste -> Run)
 
@@ -44,6 +44,14 @@ create policy "garments_delete_own" on public.garments
   for delete using (auth.uid() = user_id);
 
 grant select, insert, update, delete on public.garments to authenticated;
+
+-- ─────────────────────────────────────────────
+-- garments: catalog photo + tag/barcode capture
+-- ─────────────────────────────────────────────
+alter table public.garments add column if not exists catalog_image_path text;
+alter table public.garments add column if not exists tag_image_path text;
+alter table public.garments add column if not exists tag_barcode_value text;
+alter table public.garments add column if not exists tag_barcode_format text;
 
 -- ─────────────────────────────────────────────
 -- outfits

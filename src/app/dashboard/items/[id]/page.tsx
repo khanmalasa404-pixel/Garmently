@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import DashboardHeader from "@/components/dashboard-header";
 import { createClient } from "@/lib/supabase/server";
 import { deleteGarment } from "./garment-actions";
+
+import { logout } from "../../actions";
+
 type GarmentPageProps = {
   params: Promise<{
     id: string;
@@ -40,6 +44,7 @@ export default async function GarmentPage({
         primary_color,
         material,
         image_path,
+        catalog_image_path,
         care_label_image_path,
         washing_instructions,
         detergent_recommendation,
@@ -54,15 +59,27 @@ export default async function GarmentPage({
     notFound();
   }
 
-  let garmentImageUrl: string | null = null;
+  let heroImageUrl: string | null = null;
+  let originalImageUrl: string | null = null;
   let careLabelImageUrl: string | null = null;
 
-  if (garment.image_path) {
+  const heroImagePath =
+    garment.catalog_image_path ?? garment.image_path;
+
+  if (heroImagePath) {
+    const { data } = await supabase.storage
+      .from("garment-images")
+      .createSignedUrl(heroImagePath, 60 * 60);
+
+    heroImageUrl = data?.signedUrl ?? null;
+  }
+
+  if (garment.catalog_image_path && garment.image_path) {
     const { data } = await supabase.storage
       .from("garment-images")
       .createSignedUrl(garment.image_path, 60 * 60);
 
-    garmentImageUrl = data?.signedUrl ?? null;
+    originalImageUrl = data?.signedUrl ?? null;
   }
 
   if (garment.care_label_image_path) {
@@ -74,45 +91,67 @@ export default async function GarmentPage({
   }
 
   return (
-    <main className="min-h-screen bg-neutral-950 px-6 py-10 text-white">
-      <section className="mx-auto max-w-5xl">
+    <main className="min-h-screen text-[#f4efe6]">
+      <DashboardHeader
+        userEmail={user.email}
+        logoutAction={logout}
+      />
+
+      <div className="mx-auto max-w-5xl px-5 py-12 sm:px-8">
         <Link
           href="/dashboard"
-          className="text-sm text-neutral-400 hover:text-white"
+          className="text-sm text-[#a59d8e] hover:text-[#f4efe6]"
         >
           ← Back to closet
         </Link>
 
         {query.error && (
-          <div className="mt-8 rounded-xl border border-red-900 bg-red-950/40 p-4 text-red-200">
+          <div className="mt-8 rounded-xl border border-[#c87a72]/30 bg-[#c87a72]/10 p-4 text-[#e6b7b1]">
             {query.error}
           </div>
         )}
 
         <div className="mt-10 grid gap-10 lg:grid-cols-2">
           <div className="space-y-6">
-            <div className="overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900">
-              {garmentImageUrl ? (
+            <div className="overflow-hidden rounded-[2rem] border border-white/[0.08] bg-[#151410]">
+              {heroImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={garmentImageUrl}
+                  src={heroImageUrl}
                   alt={garment.name}
                   className="aspect-square w-full object-cover"
                 />
               ) : (
-                <div className="flex aspect-square items-center justify-center text-neutral-500">
+                <div className="flex aspect-square items-center justify-center text-[#777064]">
                   No clothing photograph
                 </div>
               )}
             </div>
 
+            {originalImageUrl && (
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#8d7042]">
+                  Original photograph
+                </p>
+
+                <div className="overflow-hidden rounded-2xl border border-white/[0.08]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={originalImageUrl}
+                    alt={`Original photograph of ${garment.name}`}
+                    className="w-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
+
             {careLabelImageUrl && (
               <div>
-                <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-neutral-500">
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#8d7042]">
                   Care label
                 </p>
 
-                <div className="overflow-hidden rounded-2xl border border-neutral-800">
+                <div className="overflow-hidden rounded-2xl border border-white/[0.08]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={careLabelImageUrl}
@@ -125,15 +164,15 @@ export default async function GarmentPage({
           </div>
 
           <div>
-            <p className="text-sm capitalize text-neutral-500">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#c7a66a]">
               {garment.category}
             </p>
 
-            <h1 className="mt-2 text-4xl font-bold">
+            <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold sm:text-5xl">
               {garment.name}
             </h1>
 
-            <div className="mt-8 divide-y divide-neutral-800 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
+            <div className="mt-8 divide-y divide-white/[0.07] overflow-hidden rounded-2xl border border-white/[0.08] bg-[#151410]">
               <DetailRow
                 label="Brand"
                 value={garment.brand}
@@ -150,23 +189,23 @@ export default async function GarmentPage({
               />
             </div>
 
-            <section className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
-              <p className="text-sm font-semibold uppercase tracking-widest text-neutral-500">
+            <section className="mt-6 rounded-2xl border border-white/[0.08] bg-[#151410] p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8d7042]">
                 Washing instructions
               </p>
 
-              <p className="mt-3 leading-7 text-neutral-300">
+              <p className="mt-3 leading-7 text-[#a59d8e]">
                 {garment.washing_instructions ||
                   "No washing instructions have been added."}
               </p>
             </section>
 
-            <section className="mt-6 rounded-2xl border border-neutral-800 bg-neutral-900 p-6">
-              <p className="text-sm font-semibold uppercase tracking-widest text-neutral-500">
+            <section className="mt-6 rounded-2xl border border-white/[0.08] bg-[#151410] p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8d7042]">
                 Detergent recommendation
               </p>
 
-              <p className="mt-3 leading-7 text-neutral-300">
+              <p className="mt-3 leading-7 text-[#a59d8e]">
                 {garment.detergent_recommendation ||
                   "No detergent recommendation has been added."}
               </p>
@@ -175,7 +214,7 @@ export default async function GarmentPage({
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href={`/dashboard/items/${garment.id}/edit`}
-                className="rounded-xl bg-white px-6 py-3 text-center font-semibold text-black hover:bg-neutral-200"
+                className="rounded-xl bg-[#e6d3ae] px-6 py-3 text-center font-semibold text-[#17130d] hover:bg-[#f4e5c8]"
               >
                 Edit item
               </Link>
@@ -189,20 +228,20 @@ export default async function GarmentPage({
 
                 <button
                   type="submit"
-                  className="w-full rounded-xl border border-red-900 px-6 py-3 font-semibold text-red-300 hover:bg-red-950/40"
+                  className="w-full rounded-xl border border-[#c87a72]/40 px-6 py-3 font-semibold text-[#e6b7b1] hover:bg-[#c87a72]/10"
                 >
                   Delete item
                 </button>
               </form>
             </div>
 
-            <p className="mt-4 text-xs text-neutral-600">
+            <p className="mt-4 text-xs text-[#5f594f]">
               The delete button immediately removes the garment and its
               uploaded images.
             </p>
           </div>
         </div>
-      </section>
+      </div>
     </main>
   );
 }
@@ -215,9 +254,9 @@ type DetailRowProps = {
 function DetailRow({ label, value }: DetailRowProps) {
   return (
     <div className="flex items-start justify-between gap-6 p-5">
-      <span className="text-neutral-500">{label}</span>
+      <span className="text-[#777064]">{label}</span>
 
-      <span className="text-right font-medium">
+      <span className="text-right font-medium text-[#e8e1d6]">
         {value || "Not provided"}
       </span>
     </div>
