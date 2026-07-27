@@ -50,9 +50,9 @@ export default function BrandLogo({
 
       {!compact && (
         <span>
-          <span className="block font-[family-name:var(--font-display)] text-2xl font-semibold leading-none tracking-tight text-[#f4efe6]">
-            Wardrobe
-          </span>
+          <span className="font-[family-name:var(--font-display)] text-4xl font-semibold text-[#f4efe6]">
+          Garment<span className="text-[#c7a66a]">Ly</span>
+        </span>
 
          
         </span>
