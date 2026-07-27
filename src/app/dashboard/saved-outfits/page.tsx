@@ -170,7 +170,7 @@ export default async function SavedOutfitsPage() {
         <div className="mt-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm uppercase tracking-widest text-neutral-500">
-              Wardrobe AI
+              Garmently
             </p>
 
             <h1 className="mt-3 text-4xl font-bold">

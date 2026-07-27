@@ -25,7 +25,7 @@ export default async function AddItemPage() {
         </Link>
 
         <p className="mt-10 text-sm uppercase tracking-widest text-neutral-500">
-          Wardrobe AI
+          Garmently
         </p>
 
         <h1 className="mt-3 text-4xl font-bold">

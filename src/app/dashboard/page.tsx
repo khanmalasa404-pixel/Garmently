@@ -85,7 +85,7 @@ export default async function DashboardPage() {
           </div>
 
           <div className="absolute bottom-[-2.5rem] right-8 hidden select-none font-[family-name:var(--font-display)] text-[15rem] font-semibold leading-none text-white/[0.018] lg:block">
-            W
+            G
           </div>
 
           <div className="relative max-w-3xl">
@@ -366,8 +366,15 @@ export default async function DashboardPage() {
 
       <footer className="mt-20 border-t border-white/[0.06]">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-8 text-xs text-[#5f594f] sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <p>Wardrobe AI · Dress with intention</p>
-
+        <p>
+  <span className="font-semibold text-[#f4efe6]">
+    GARMENT
+  </span>
+  <span className="font-semibold text-[#c7a66a]">
+    Ly
+  </span>
+  <span> · Dress with intention</span>
+</p>
           <p>Your wardrobe remains private to your account.</p>
         </div>
       </footer>

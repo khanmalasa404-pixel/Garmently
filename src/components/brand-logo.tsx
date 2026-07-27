@@ -13,7 +13,7 @@ export default function BrandLogo({
     <Link
       href={href}
       className="group inline-flex items-center gap-3"
-      aria-label="Wardrobe AI home"
+      aria-label="Garmently home"
     >
       <span className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-[#c7a66a]/35 bg-[#171611] shadow-[0_8px_30px_rgba(0,0,0,0.25)] transition duration-300 group-hover:border-[#c7a66a]/70 group-hover:shadow-[0_10px_35px_rgba(199,166,106,0.12)]">
         <span className="absolute inset-0 bg-gradient-to-br from-[#c7a66a]/15 via-transparent to-transparent" />
@@ -51,12 +51,10 @@ export default function BrandLogo({
       {!compact && (
         <span>
           <span className="block font-[family-name:var(--font-display)] text-2xl font-semibold leading-none tracking-tight text-[#f4efe6]">
-            Wardrobe
+            GARMENTLY
           </span>
 
-          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.34em] text-[#c7a66a]">
-            Artificial Intelligence
-          </span>
+         
         </span>
       )}
     </Link>
