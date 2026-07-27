@@ -51,12 +51,10 @@ export default function BrandLogo({
       {!compact && (
         <span>
           <span className="block font-[family-name:var(--font-display)] text-2xl font-semibold leading-none tracking-tight text-[#f4efe6]">
-            Garmently
+            Wardrobe
           </span>
 
-          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.34em] text-[#c7a66a]">
-            Artificial Intelligence
-          </span>
+         
         </span>
       )}
     </Link>
