@@ -14,6 +14,18 @@ Organize your clothing, understand garment care, and create personalized outfits
 ![Gemini](https://img.shields.io/badge/Google_Gemini-AI-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-black?style=for-the-badge&logo=vercel)
 
+<br />
+<br />
+
+<a href="https://garmently-eta.vercel.app">
+  <strong>Launch GARMENTLy →</strong>
+</a>
+
+<br />
+<br />
+
+[![Live Website](https://img.shields.io/badge/Live_Website-garmently--eta.vercel.app-C7A66A?style=flat-square&logo=vercel&logoColor=white)](https://garmently-eta.vercel.app)
+
 </div>
 
 ---
@@ -28,6 +40,16 @@ Users can photograph garments and care labels, receive AI-generated clothing det
 
 ---
 
+## Live Prototype
+
+The working GARMENTLy prototype is available at:
+
+### [Visit GARMENTLy](https://garmently-eta.vercel.app)
+
+The current version demonstrates the complete core experience, including wardrobe organization, AI garment analysis, clothing-care guidance, catalog-photo generation, and personalized outfit creation.
+
+---
+
 ## Core Features
 
 | | Feature | What it does |
@@ -35,23 +57,24 @@ Users can photograph garments and care labels, receive AI-generated clothing det
 | 👕 | **Digital Wardrobe** | Upload, organize, edit, and manage garments in one private closet. |
 | ✨ | **AI Garment Analysis** | Identify likely categories, colors, materials, and garment details from photographs. |
 | 🧺 | **Clothing Care Guidance** | Generate washing, drying, detergent, and care recommendations. |
-| 🏷️ | **Care-Label & Barcode Scanning** | Scan clothing labels and supported barcodes to improve garment identification. |
+| 🏷️ | **Care-Label and Barcode Scanning** | Scan clothing labels and supported barcodes to improve garment identification. |
 | 📸 | **AI Catalog Photos** | Create cleaner catalog-style images for a more consistent digital wardrobe. |
-| 🧥 | **Personalized Outfit Generation** | Build outfits from garments already saved in the user's closet. |
-| 🔖 | **Saved Outfits** | Save generated looks for future occasions and inspiration. |
+| 🧥 | **Personalized Outfit Generation** | Build outfits using garments already saved in the user's closet. |
+| 🔖 | **Saved Outfits** | Save generated looks for future occasions and styling inspiration. |
 | 🔒 | **Private Accounts** | Protect user data and garment images using Supabase authentication and Row Level Security. |
 
 ---
 
 ## How It Works
 
-1. **Create an account**
+1. **Create a private account**
 2. **Upload a garment photograph**
 3. **Add an optional care-label image or barcode**
-4. **Let Gemini analyze the garment**
-5. **Review and save the generated information**
-6. **Build outfits from your own collection**
-7. **Save favorite looks for later**
+4. **Allow Gemini to analyze the garment**
+5. **Review and edit the generated information**
+6. **Save the garment to your digital wardrobe**
+7. **Generate outfits using your own collection**
+8. **Save favorite looks for later**
 
 ---
 
@@ -65,6 +88,7 @@ GARMENTLy is designed around a premium dark interface with neutral tones and mut
 - Personalized garment details
 - AI-supported care and styling tools
 - Clean catalog-style presentation
+- Outfit recommendations based on owned garments
 
 <!--
 Add a product screenshot to the repository at:
@@ -92,6 +116,39 @@ Then remove the comment markers around the line below.
 | Barcode Scanning | ZXing |
 | Validation | Zod |
 | Deployment | Vercel |
+
+---
+
+## Current Infrastructure
+
+GARMENTLy is currently operating as an early-stage prototype using the free development tiers of:
+
+- Google Gemini API
+- Supabase
+- Vercel
+
+These services currently support product demonstrations, testing, and early user feedback while allowing the core experience to be developed efficiently.
+
+Because this is a prototype, the platform may currently experience limitations involving:
+
+- AI request volume
+- Processing speed
+- Database usage
+- Image-storage capacity
+- Simultaneous users
+- AI model availability
+
+As GARMENTLy grows and additional funding becomes available, the platform will move toward paid infrastructure to support:
+
+- Higher AI request limits
+- Faster and more reliable processing
+- Expanded database and storage capacity
+- Improved monitoring and security
+- More simultaneous users
+- More advanced AI personalization
+- Greater production reliability
+
+The current infrastructure is intended to validate the product experience before expanding GARMENTLy for larger-scale use.
 
 ---
 
@@ -161,6 +218,8 @@ npm start
 
 ### Working early-stage prototype
 
+GARMENTLy currently demonstrates the complete core product experience.
+
 Currently implemented:
 
 - User authentication
@@ -173,6 +232,9 @@ Currently implemented:
 - Personalized outfit generation
 - Saved outfits
 - Responsive interface
+- Live Vercel deployment
+
+The platform is actively being tested and improved before wider public release.
 
 ---
 
@@ -185,13 +247,15 @@ Currently implemented:
 - [ ] Improved garment recognition
 - [ ] Wardrobe-gap recommendations
 - [ ] Social outfit sharing
+- [ ] Expanded user personalization
 - [ ] Native mobile application
+- [ ] Paid production infrastructure
 
 ---
 
-## Founder
+## Founders
 
-Created by **Talal Mehmood & Malasa Khan**.
+GARMENTLy was created by **Talal Mehmood and Malasa Khan**.
 
 ---
 
@@ -205,5 +269,10 @@ AI-generated garment information and care recommendations should be reviewed alo
 
 **Your wardrobe. Better understood.**
 
-</div>
+<br />
 
+<a href="https://garmently-eta.vercel.app">
+  <strong>Explore the Live Prototype →</strong>
+</a>
+
+</div>
