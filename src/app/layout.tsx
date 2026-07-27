@@ -36,11 +36,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // Grammarly and similar extensions add attributes to these two
+    // elements before React hydrates. Suppression does not cascade to
+    // children, so real mismatches are still reported.
     <html
       lang="en"
       className={`${manrope.variable} ${cormorant.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col">
+      <body
+        className="flex min-h-full flex-col"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>
